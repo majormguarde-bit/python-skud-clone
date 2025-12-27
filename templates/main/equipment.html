@@ -342,9 +342,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                 } else {
                     // Круг с буквой (для остальных)
-                    // Используем text-dark для желтого фона (bg-warning) для лучшей читаемости, иначе text-white-50 (приглушенный)
-                    const textColor = isActive ? 'text-dark' : 'text-white-50';
-                    flagEl.className = `d-flex align-items-center justify-content-center ${textColor} rounded-circle ${isActive ? config.colorTrue : config.colorFalse}`;
+                    // Активные флаги: заливка + темный текст
+                    // Неактивные флаги: прозрачный фон + серая рамка + серый текст
+                    let className = '';
+                    if (isActive) {
+                        className = `d-flex align-items-center justify-content-center text-dark rounded-circle ${config.colorTrue}`;
+                    } else {
+                        className = `d-flex align-items-center justify-content-center text-secondary border border-secondary rounded-circle`;
+                    }
+                    
+                    flagEl.className = className;
                     flagEl.style.width = '30px';
                     flagEl.style.height = '30px';
                     flagEl.style.fontWeight = 'bold';
