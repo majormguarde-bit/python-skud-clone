@@ -531,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th class="py-1">Адрес</th>
                         <th class="py-1">FwVer</th>
                         <th class="py-1">Режим</th>
+                        <th class="py-1">OverLic</th>
                         <th class="py-1">Unbaund</th>
                         <th class="py-1">FActive</th>
                         <th class="py-1">Статус</th>
@@ -584,9 +585,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         </td>
                         
                         <td class="py-1">
+                             {% set val = controller.extra_data.get('OVERLIC') if controller.extra_data else 0 %}
+                             {% set active = val == 1 or val == '1' or val == True %}
+                             {% if active %}
+                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-danger text-white" style="width: 20px; height: 20px; font-weight: bold; font-size: 0.7rem;" title="OverLic">L</div>
+                             {% endif %}
+                        </td>
+                        
+                        <td class="py-1">
                              {% set val = controller.extra_data.get('UNBAUND') if controller.extra_data else 0 %}
                              {% set active = val == 1 or val == '1' or val == True %}
-                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle {{ 'bg-warning text-dark' if active else 'bg-secondary text-white-50' }}" style="width: 20px; height: 20px; font-weight: bold; font-size: 0.7rem;" title="Unbaund">U</div>
+                             {% if active %}
+                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-warning text-dark" style="width: 20px; height: 20px; font-weight: bold; font-size: 0.7rem;" title="Unbaund">U</div>
+                             {% endif %}
                         </td>
                         <td class="py-1">
                              {% set val = controller.extra_data.get('FACTIVE') if controller.extra_data else 0 %}
@@ -613,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="11" class="text-center">Нет добавленных контроллеров</td>
+                        <td colspan="12" class="text-center">Нет добавленных контроллеров</td>
                     </tr>
                     {% endfor %}
                 </tbody>
