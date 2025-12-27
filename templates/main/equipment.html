@@ -518,6 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th class="py-1">Модель</th>
                         <th class="py-1">Адрес</th>
                         <th class="py-1">FwVer</th>
+                        <th class="py-1">Режим</th>
                         <th class="py-1">Unbaund</th>
                         <th class="py-1">FActive</th>
                         <th class="py-1">FDelete</th>
@@ -547,6 +548,28 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td class="py-1">{{ controller.addr }}</td>
                         <td class="py-1">
                             {{ controller.extra_data.get('FWVER', '') if controller.extra_data else '' }}
+                        </td>
+                        <td class="py-1">
+                             {% set mode_val = controller.extra_data.get('MODE') | int if controller.extra_data and controller.extra_data.get('MODE') is not none else 0 %}
+                             {% set mode_char = '' %}
+                             {% set mode_bg = '' %}
+                             {% if mode_val == 1 %}
+                                 {% set mode_char = 'Б' %}
+                                 {% set mode_bg = 'bg-danger' %}
+                             {% elif mode_val == 2 %}
+                                 {% set mode_char = 'С' %}
+                                 {% set mode_bg = 'bg-success' %}
+                             {% elif mode_val == 3 %}
+                                 {% set mode_char = 'О' %}
+                                 {% set mode_bg = 'bg-primary' %}
+                             {% elif mode_val != 0 %}
+                                 {% set mode_char = '?' %}
+                                 {% set mode_bg = 'bg-secondary' %}
+                             {% endif %}
+                             
+                             {% if mode_char %}
+                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle {{ mode_bg }} text-white" style="width: 20px; height: 20px; font-weight: bold; font-size: 0.7rem;" title="Режим: {{ mode_char }}">{{ mode_char }}</div>
+                             {% endif %}
                         </td>
                         
                         <td class="py-1">
@@ -584,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="11" class="text-center">Нет добавленных контроллеров</td>
+                        <td colspan="12" class="text-center">Нет добавленных контроллеров</td>
                     </tr>
                     {% endfor %}
                 </tbody>
