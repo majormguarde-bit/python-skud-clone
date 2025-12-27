@@ -2,6 +2,18 @@
 
 {% block title %}Оборудование{% endblock %}
 
+{% block styles %}
+<style>
+    .sticky-header th {
+        position: sticky;
+        top: 50px;
+        z-index: 1010;
+        background-color: #f8f9fa; /* bg-light */
+        box-shadow: inset 0 -1px 0 #dee2e6; /* Border color */
+    }
+</style>
+{% endblock %}
+
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -505,12 +517,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Контроллеры -->
 <div class="card">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+    <div class="card-header sticky-top bg-light d-flex justify-content-between align-items-center" style="z-index: 1020;">
         <h5 class="mb-0" id="controllers-title">Контроллеры (Все)</h5>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover mb-0 table-sm align-middle">
+        <div>
+            <table class="table table-striped table-hover mb-0 table-sm align-middle sticky-header">
                 <thead>
                     <tr>
                         <th class="py-1">Название</th>
@@ -521,7 +533,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th class="py-1">Режим</th>
                         <th class="py-1">Unbaund</th>
                         <th class="py-1">FActive</th>
-                        <th class="py-1">FDelete</th>
                         <th class="py-1">Статус</th>
                         <th class="py-1">Последняя активность</th>
                         <th class="py-1">Действия</th>
@@ -582,11 +593,6 @@ document.addEventListener('DOMContentLoaded', function() {
                              {% set active = val == 1 or val == '1' or val == True %}
                              <div class="d-inline-flex align-items-center justify-content-center rounded-circle {{ 'bg-warning text-dark' if active else 'bg-secondary text-white-50' }}" style="width: 20px; height: 20px; font-weight: bold; font-size: 0.7rem;" title="FActive">A</div>
                         </td>
-                        <td class="py-1">
-                             {% set val = controller.extra_data.get('FDELETE') if controller.extra_data else 0 %}
-                             {% set active = val == 1 or val == '1' or val == True %}
-                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle {{ 'bg-warning text-dark' if active else 'bg-secondary text-white-50' }}" style="width: 20px; height: 20px; font-weight: bold; font-size: 0.7rem;" title="FDelete">D</div>
-                        </td>
 
                         <td class="py-1">
                             {% if controller.status == 'online' %}
@@ -607,12 +613,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="12" class="text-center">Нет добавленных контроллеров</td>
+                        <td colspan="11" class="text-center">Нет добавленных контроллеров</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 {% endblock %}
