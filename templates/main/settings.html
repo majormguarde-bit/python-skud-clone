@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Настройки{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileBrowserModal = document.getElementById('fileBrowserModal');
+    const fileList = document.getElementById('file-browser-list');
+    const breadcrumb = document.getElementById('file-browser-breadcrumb');
+    const dbInput = document.getElementById('firebird_database');
+    let currentPath = '';
+
+    fileBrowserModal.addEventListener('show.bs.modal', function () {
+        // Try to start from current input path directory, or root
+        let initialPath = dbInput.value.trim();
+        // If it looks like a file, take dirname
+        if (initialPath && !initialPath.endsWith('\\') && !initialPath.endsWith('/')) {
+            // Simple heuristic to strip filename
+            const lastSeparator = Math.max(initialPath.lastIndexOf('/'), initialPath.lastIndexOf('\\'));
+            if (lastSeparator !== -1) {
+                initialPath = initialPath.substring(0, lastSeparator);
+            }
+        }
+        loadPath(initialPath);
+    });
+
+    function loadPath(path) {
+        fileList.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        
+        fetch(`/api/files/list?path=${encodeURIComponent(path)}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(data => {
+                renderFileList(data);
+                updateBreadcrumb(path);
+                currentPath = path;
+            })
+            .catch(error => {
+                fileList.innerHTML = `<div class="alert alert-danger">Ошибка загрузки: ${error.message}</div>`;
+                // Fallback to root on error if we weren't already there
+                if (path) {
+                    setTimeout(() => loadPath(''), 2000);
+                }
+            });
+    }
+
+    function renderFileList(items) {
+        fileList.innerHTML = '';
+        
+        if (items.length === 0) {
+            fileList.innerHTML = '<div class="list-group-item text-center text-muted">Пусто</div>';
+            return;
+        }
+
+        items.forEach(item => {
+            const el = document.createElement('button');
+            el.className = 'list-group-item list-group-item-action d-flex align-items-center';
+            
+            let icon = 'bi-file-earmark';
+            if (item.type === 'dir') {
+                icon = 'bi-folder-fill text-warning';
+            } else if (item.name.endsWith('.fdb')) {
+                icon = 'bi-database-fill text-primary';
+            }
+
+            el.innerHTML = `
+                <i class="bi ${icon} me-2"></i>
+                ${item.name}
+            `;
+
+            el.onclick = () => {
+                if (item.type === 'dir') {
+                    loadPath(item.path);
+                } else {
+                    dbInput.value = item.path;
+                    const modal = bootstrap.Modal.getInstance(fileBrowserModal);
+                    modal.hide();
+                }
+            };
+
+            fileList.appendChild(el);
+        });
+    }
+
+    function updateBreadcrumb(path) {
+        breadcrumb.innerHTML = '';
+        
+        // Always add Home/Root
+        const homeLi = document.createElement('li');
+        homeLi.className = 'breadcrumb-item';
+        const homeLink = document.createElement('a');
+        homeLink.href = '#';
+        homeLink.textContent = 'Корень';
+        homeLink.onclick = (e) => { e.preventDefault(); loadPath(''); };
+        homeLi.appendChild(homeLink);
+        breadcrumb.appendChild(homeLi);
+
+        if (!path) return;
+        
+        const currentLi = document.createElement('li');
+        currentLi.className = 'breadcrumb-item active';
+        currentLi.textContent = path;
+        breadcrumb.appendChild(currentLi);
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Настройки системы</h1>
+</div>
+
+<div class="modal fade" id="fileBrowserModal" tabindex="-1" aria-labelledby="fileBrowserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fileBrowserModalLabel">Выбор файла базы данных</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb" id="file-browser-breadcrumb">
+                        <!-- Breadcrumbs will be populated by JS -->
+                    </ol>
+                </nav>
+                <div class="list-group" id="file-browser-list">
+                    <!-- File list will be populated by JS -->
+                    <div class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endwith %}
+
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        <form method="POST">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-database"></i> Подключение к базе данных СКУД (Firebird)
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="firebird_host" class="form-label">Хост (IP адрес)</label>
+                        <input type="text" class="form-control" id="firebird_host" name="firebird_host" value="{{ config.FIREBIRD_HOST }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="firebird_port" class="form-label">Порт</label>
+                        <input type="number" class="form-control" id="firebird_port" name="firebird_port" value="{{ config.FIREBIRD_PORT }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="firebird_database" class="form-label">Путь к базе данных</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="firebird_database" name="firebird_database" value="{{ config.FIREBIRD_DATABASE }}" required>
+                            <button class="btn btn-outline-secondary" type="button" id="browse_db_btn" data-bs-toggle="modal" data-bs-target="#fileBrowserModal">
+                                <i class="bi bi-folder2-open"></i> Обзор
+                            </button>
+                        </div>
+                        <div class="form-text">Абсолютный путь к файлу .fdb или алиас</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="firebird_user" class="form-label">Пользователь</label>
+                        <input type="text" class="form-control" id="firebird_user" name="firebird_user" value="{{ config.FIREBIRD_USER }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="firebird_password" class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="firebird_password" name="firebird_password" value="{{ config.FIREBIRD_PASSWORD }}" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <i class="bi bi-gear"></i> Общие настройки
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="scan_interval" class="form-label">Интервал сканирования устройств (сек)</label>
+                        <input type="number" class="form-control" id="scan_interval" name="scan_interval" value="{{ config.SCAN_INTERVAL }}" min="1" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-save"></i> Сохранить настройки
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}СКУД Сервер - Главная{% endblock %}
+
+{% block styles %}
+<style>
+    .controller-card:hover {
+        transform: scale(1.05);
+        z-index: 10;
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <div>
+        <h1 class="h2"><i class="bi bi-speedometer2"></i> Панель управления</h1>
+        <p class="text-muted mb-0">Система контроля доступа - Сервер АВАНГАРД</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <form action="{{ url_for('main.sync_equipment') }}" method="post" class="me-2">
+            <button type="submit" class="btn btn-sm btn-outline-success">
+                <i class="bi bi-arrow-repeat"></i> Загрузить из БД
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Статистика -->
+<div class="row mt-4 row-cols-1 row-cols-md-5 g-4">
+    <div class="col">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_converters }}/{{ online_converters }}</h4>
+                        <p class="card-text">Конвертеры</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-hdd-network fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_controllers }}/{{ online_controllers }}</h4>
+                        <p class="card-text">Контроллеры</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-cpu fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ total_personnel }}</h4>
+                        <p class="card-text">Персонал</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-people fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ active_keys }}/{{ total_keys }}</h4>
+                        <p class="card-text">Карты</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-card-heading fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col">
+        <div class="card bg-warning text-white h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title" id="events-today">-</h4>
+                        <p class="card-text">Событий сегодня</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-calendar-event fs-1"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- График событий и последние события -->
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-graph-up"></i> События за последние 7 дней</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="eventsChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-list-check"></i> Последние события</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Время</th>
+                                <th>Тип</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in recent_events %}
+                            <tr class="event-row">
+                                <td>{{ event.event_time.strftime('%H:%M') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if event.access_granted else 'danger' }}">
+                                        {{ event.event_type.name }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if event.access_key %}
+                                        {{ event.access_key.key_number }}
+                                    {% elif event.card_number %}
+                                        {{ event.card_number }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Статус устройств -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="bi bi-diagram-3"></i> Сеть контроллеров</h5>
+            </div>
+            <div class="card-body">
+                {% for converter in converters %}
+                    <div class="mb-4 border-bottom pb-3">
+                        <h5 class="card-title border-bottom pb-2 mb-3">
+                            <i class="bi bi-hdd-network"></i> {{ converter.name }} 
+                            <span class="text-muted small">({{ converter.ip_address }}:{{ converter.port }})</span>
+                            {% if converter.last_seen and converter.last_seen >= online_threshold %}
+                                <span class="badge bg-success">Online</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Offline</span>
+                            {% endif %}
+                        </h5>
+                        
+                        <div class="d-flex flex-wrap">
+                            {% for controller in converter.controllers %}
+                                {% set is_online = controller.last_session and controller.last_session >= online_threshold %}
+                                 {% set model_name = '' %}
+                                 {% if controller.extra_data and controller.extra_data.get('CTRLTYPE') is not none %}
+                                     {% set nCtrlType = controller.extra_data.get('CTRLTYPE') | int %}
+                                     {% set n = nCtrlType % 256 %}
+                                     {% if n == 33 %}{% set model_name = 'Gate 2K' %}
+                                     {% elif n == 36 %}{% set model_name = 'Matrix II Net' %}
+                                     {% elif n == 37 %}{% set model_name = 'Z5R Net' %}
+                                     {% elif n == 39 %}{% set model_name = 'Guard Net' %}
+                                     {% elif n == 40 %}{% set model_name = 'Z5-R WEB' %}
+                                     {% else %}{% set model_name = nCtrlType %}
+                                     {% endif %}
+                                 {% endif %}
+                                 {% set fw_ver = controller.extra_data.get('FWVER', '-') if controller.extra_data else '-' %}
+                                 {% set mode_val = controller.extra_data.get('MODE') | int if controller.extra_data and controller.extra_data.get('MODE') is not none else 0 %}
+                                 {% set mode_char = '' %}
+                                 {% set mode_bg = '' %}
+                                 {% if mode_val == 1 %}
+                                     {% set mode_char = 'Б' %}
+                                     {% set mode_bg = 'bg-danger' %}
+                                 {% elif mode_val == 2 %}
+                                     {% set mode_char = 'С' %}
+                                     {% set mode_bg = 'bg-success' %}
+                                 {% elif mode_val == 3 %}
+                                     {% set mode_char = 'О' %}
+                                     {% set mode_bg = 'bg-primary' %}
+                                 {% elif mode_val != 0 %}
+                                     {% set mode_char = '?' %}
+                                     {% set mode_bg = 'bg-secondary' %}
+                                 {% endif %}
+
+                                 <div class="card mb-2 me-2 shadow-sm controller-card {{ 'bg-warning text-dark' if is_online else 'bg-light border border-secondary text-dark' }} position-relative"
+                                      style="width: 78px; height: 78px; cursor: pointer; transition: transform 0.2s; overflow: visible;"
+                                      ondblclick="window.location.href='{{ url_for('main.controller_detail', id=controller.id) }}'"
+                                      data-bs-toggle="tooltip" data-bs-html="true"
+                                      title="<b>{{ controller.name }}</b><br>SN: {{ controller.serial_number }}<br>{{ model_name }} - {{ fw_ver }}">
+                                    
+                                    {% if mode_char %}
+                                    <div class="position-absolute rounded-circle {{ mode_bg }} text-white d-flex align-items-center justify-content-center shadow-sm" 
+                                         style="width: 25px; height: 25px; font-size: 0.9rem; font-weight: bold; line-height: 1; top: -4px; right: -4px;">
+                                        {{ mode_char }}
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="card-body p-1 d-flex flex-column align-items-center justify-content-center text-center h-100">
+                                          <i class="bi bi-cpu fs-6 mb-1"></i>
+                                          <div class="fw-bold lh-sm text-truncate w-100" style="font-size: 0.8rem;" title="{{ controller.name }}">{{ controller.name }}</div>
+                                          <div class="opacity-75 mt-0" style="font-size: 0.7rem;">{{ controller.serial_number }}</div>
+                                      </div>
+                                </div>
+                            {% else %}
+                                <div class="text-muted fst-italic ms-3">Нет привязанных контроллеров</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                     <div class="text-center text-muted py-4">Нет добавленных конвертеров</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Загрузка статистики
+fetch('/api/dashboard/stats')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('events-today').textContent = data.events_today;
+        
+        // Построение графика
+        const ctx = document.getElementById('eventsChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.events_7_days.map(item => {
+                    const date = new Date(item.date);
+                    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+                }),
+                datasets: [{
+                    label: 'Количество событий',
+                    data: data.events_7_days.map(item => item.count),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+// Автообновление данных
+setInterval(() => {
+    fetch('/api/dashboard/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('events-today').textContent = data.events_today;
+        });
+}, 30000); // Обновление каждые 30 секунд
+
+// Инициализация тултипов
+var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+  return new bootstrap.Tooltip(tooltipTriggerEl)
+})
+</script>
+{% endblock %}

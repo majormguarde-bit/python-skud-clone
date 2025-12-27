@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Контроллер {{ controller.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">{{ controller.name }}</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('main.equipment') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Назад
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Информация о контроллере
+            </div>
+            <div class="card-body">
+                <p><strong>Серийный номер:</strong> {{ controller.serial_number }}</p>
+                <p><strong>Адрес:</strong> {{ controller.addr }}</p>
+                <p><strong>Статус:</strong> 
+                    {% if controller.status == 'online' %}
+                    <span class="badge bg-success">Online</span>
+                    {% else %}
+                    <span class="badge bg-danger">Offline</span>
+                    {% endif %}
+                </p>
+                <p><strong>Последняя активность:</strong> {{ controller.last_session.strftime('%d.%m.%Y %H:%M') if controller.last_session else 'Никогда' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
