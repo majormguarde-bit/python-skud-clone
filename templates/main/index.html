@@ -110,9 +110,11 @@
     </div>
 </div>
 
-<!-- График событий и последние события -->
-<div class="row mt-4">
-    <div class="col-md-8">
+<!-- Основной контент: График + Устройства (слева) и Последние события (справа) -->
+<div class="row mt-4 align-items-stretch">
+    <!-- Левая колонка: График и Устройства -->
+    <div class="col-md-8 d-flex flex-column gap-4">
+        <!-- График событий -->
         <div class="card">
             <div class="card-header">
                 <h5><i class="bi bi-graph-up"></i> События за последние 7 дней</h5>
@@ -121,56 +123,10 @@
                 <canvas id="eventsChart" height="100"></canvas>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="bi bi-list-check"></i> Последние события</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="table-light sticky-top">
-                            <tr>
-                                <th>Время</th>
-                                <th>Тип</th>
-                                <th>Описание</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for event in recent_events %}
-                            <tr class="event-row">
-                                <td>{{ event.event_time.strftime('%H:%M') }}</td>
-                                <td>
-                                    <span class="badge bg-{{ 'success' if event.access_granted else 'danger' }}">
-                                        {{ event.event_type.name }}
-                                    </span>
-                                </td>
-                                <td>
-                                    {% if event.access_key %}
-                                        {{ event.access_key.key_number }}
-                                    {% elif event.card_number %}
-                                        {{ event.card_number }}
-                                    {% else %}
-                                        -
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Статус устройств -->
-<div class="row mt-4">
-    <div class="col-12">
+        <!-- Статус устройств -->
         <div class="card">
-            <div class="card-header">
+            <div class="card-header sticky-top bg-light" style="z-index: 1020;">
                 <h5><i class="bi bi-diagram-3"></i> Сеть контроллеров</h5>
             </div>
             <div class="card-body">
@@ -246,6 +202,49 @@
                 {% else %}
                      <div class="text-center text-muted py-4">Нет добавленных конвертеров</div>
                 {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Правая колонка: Последние события -->
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header sticky-top bg-light" style="z-index: 1020;">
+                <h5><i class="bi bi-list-check"></i> Последние события</h5>
+            </div>
+            <div class="card-body p-0 d-flex flex-column">
+                <div class="table-responsive flex-grow-1" style="overflow-y: auto;">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th>Время</th>
+                                <th>Тип</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in recent_events %}
+                            <tr class="event-row">
+                                <td>{{ event.event_time.strftime('%H:%M') }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if event.access_granted else 'danger' }}">
+                                        {{ event.event_type.name }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if event.access_key %}
+                                        {{ event.access_key.key_number }}
+                                    {% elif event.card_number %}
+                                        {{ event.card_number }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
