@@ -161,16 +161,9 @@ def events():
 @main.route('/keys')
 @login_required
 def access_keys():
-    """Страница управления ключами доступа"""
+    """Страница управления картами доступа"""
     keys = AccessKey.query.all()
     return render_template('main/keys.html', keys=keys)
-
-@main.route('/devices')
-@login_required
-def devices():
-    """Страница устройств"""
-    devices = Device.query.all()
-    return render_template('main/devices.html', devices=devices)
 
 @main.route('/settings', methods=['GET', 'POST'])
 @login_required
