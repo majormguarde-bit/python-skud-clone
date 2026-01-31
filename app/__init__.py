@@ -33,6 +33,11 @@ def create_app(config_name='default'):
     # Настройка LoginManager
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Пожалуйста, войдите для доступа к этой странице.'
+
+@login_manager.user_loader
+def load_user(user_id):
+    from .models import User
+    return User.query.get(int(user_id))
     
     # Регистрация blueprints
     from app.views.main import main as main_blueprint
