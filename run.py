@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 import logging
+import random
 from datetime import datetime
 
 # Добавляем текущую директорию в путь
@@ -52,15 +53,15 @@ def scan_devices():
                 controllers = Controller.query.all()
                 
                 for controller in controllers:
-                    # Здесь будет реальная проверка статуса контроллера
-                    # Пока имитация
-                    if controller.status == 'offline':
-                        # Попытка подключения
-                        logger.info(f"Проверка контроллера {controller.name}...")
-                        # Если успешно:
-                        # controller.status = 'online'
-                        # controller.last_seen = datetime.utcnow()
-                        # db.session.commit()
+                    # Имитация проверки статуса
+                    if random.choice([True, False]):
+                        controller.status = 'online'
+                        controller.last_seen = datetime.utcnow()
+                        logger.info(f"Контроллер {controller.name} в сети.")
+                    else:
+                        controller.status = 'offline'
+                        logger.warning(f"Контроллер {controller.name} не в сети.")
+                    db.session.commit()
                 
             time.sleep(10)  # Сканирование каждые 10 секунд
             
