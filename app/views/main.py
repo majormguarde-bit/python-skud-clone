@@ -166,7 +166,6 @@ def access_keys():
     return render_template('main/keys.html', keys=keys)
 
 @main.route('/settings', methods=['GET', 'POST'])
-@login_required
 def settings():
     """Страница настроек"""
     
