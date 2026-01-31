@@ -13,6 +13,10 @@ from datetime import datetime
 # Добавляем текущую директорию в путь
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Создание директории для логов
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+
 from app import create_app, db
 from app.models import User, Controller, Reader, Converter, Device
 from flask_login import LoginManager
@@ -126,10 +130,6 @@ def init_database():
             logger.error(f"Ошибка при инициализации базы данных: {e}")
 
 if __name__ == '__main__':
-    # Создание директории для логов
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
-    
     # Инициализация базы данных
     init_database()
     
